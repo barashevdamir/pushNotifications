@@ -1,9 +1,10 @@
-package pushNotifications
+package main
 
 import (
 	"log/slog"
 	"os"
 	"pushNotifications/internal/config"
+	"pushNotifications/internal/storage/postgresql"
 )
 
 const (
@@ -13,13 +14,19 @@ const (
 )
 
 func main() {
+
 	cfg := config.MustLoad()
 
 	log := setupLogger(cfg.Env)
 	log = log.With(slog.String("env", cfg.Env))
 
-	log.Info("initializing server", slog.String("address", cfg.Address))
-	log.Debug("logger debug mode enabled")
+	db, err := postgresql.Connect(cfg.HTTPServer.User, cfg.HTTPServer.Password, cfg.HTTPServer.DbName, cfg.HTTPServer.Host, cfg.HTTPServer.Port)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	log.Info("Connected to PostgreSQL database")
 }
 
 func setupLogger(env string) *slog.Logger {

@@ -20,6 +20,9 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 	User        string        `yaml:"user" env-required:"true"`
 	Password    string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
+	DbName      string        `yaml:"dbname" env-required:"true"` // Имя базы данных
+	Host        string        `yaml:"host" env-required:"true"`   // Хост базы данных
+	Port        int           `yaml:"port" env-required:"true"`   // Порт базы данных
 }
 
 func MustLoad() *Config {
