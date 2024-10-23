@@ -1,0 +1,36 @@
+version: '3'
+
+tasks:
+  install_protoc_gen:
+    desc: Устанавливает protoc-gen-go и protoc-gen-go-grpc
+    cmds:
+      - go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+      - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+    silent: true
+
+  generate_protos:
+    desc: Генерирует Go-код из protobuf файлов в директорию proto/gen
+    deps:
+      - install_protoc_gen
+    cmds:
+      - mkdir -p proto/gen
+      - |
+        protoc \
+          --proto_path=proto \
+          --go_out=proto/gen \
+          --go_opt=paths=source_relative \
+          --go-grpc_out=proto/gen \
+          --go-grpc_opt=paths=source_relative \
+          proto/*.proto
+    silent: true
+
+  clean_protos:
+    desc: Удаляет сгенерированные protobuf файлы из proto/gen
+    cmds:
+      - rm -rf proto/gen/*.pb.go
+    silent: true
+
+  test:
+    desc: Запускает все тесты
+    cmds:
+      - go test ./...

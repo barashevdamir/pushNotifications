@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"log"
 	"os"
 	"time"
@@ -9,9 +10,17 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env-default:"local"`
-	StoragePath string `yaml:"storage_path" env-required:"true"`
-	HTTPServer  `yaml:"http_server"`
+	Env            string     `yaml:"env" env-default:"local"`
+	StoragePath    string     `yaml:"storage_path" env-required:"true"`
+	GRPC           GRPCConfig `yaml:"grpc"`
+	MigrationsPath string
+	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	HTTPServer     `yaml:"http_server"`
+}
+
+type GRPCConfig struct {
+	Port    int           `yaml:"port"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 type HTTPServer struct {
@@ -26,7 +35,7 @@ type HTTPServer struct {
 }
 
 func MustLoad() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
+	configPath := fetchConfigPath()
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set")
 	}
@@ -43,4 +52,17 @@ func MustLoad() *Config {
 	}
 
 	return &cfg
+}
+
+func fetchConfigPath() string {
+	var res string
+
+	flag.StringVar(&res, "config", "", "path to config file")
+	flag.Parse()
+
+	if res == "" {
+		res = os.Getenv("CONFIG_PATH")
+	}
+
+	return res
 }

@@ -1,9 +1,13 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"os"
 	"pushNotifications/internal/config"
+	mwLogger "pushNotifications/internal/http-server/middleware/logger"
+	"pushNotifications/internal/lib/logger/sl"
 	"pushNotifications/internal/storage/postgresql"
 )
 
@@ -22,9 +26,17 @@ func main() {
 
 	db, err := postgresql.Connect(cfg.HTTPServer.User, cfg.HTTPServer.Password, cfg.HTTPServer.DbName, cfg.HTTPServer.Host, cfg.HTTPServer.Port)
 	if err != nil {
-		panic(err)
+		log.Error("failed to init storage", sl.Err(err))
+		os.Exit(1)
 	}
 	defer db.Close()
+
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 
 	log.Info("Connected to PostgreSQL database")
 }
